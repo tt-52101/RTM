@@ -144,7 +144,8 @@ export default {
       password: '',
       empresa: null,
       empresas: [],
-      checkbox_remember_me: false
+      checkbox_remember_me: false,
+      baseUrl:document.querySelector('meta[name="baseUrl"]').content
     }
   },
   mounted () {
@@ -182,9 +183,11 @@ export default {
     },
     singIn () {
       try {
+
+        const url = `${this.baseUrl  }/api/login`
         axios
           .post(
-            'http://localhost:8000/api/login',
+            url,
             {
               username: this.username,
               password: this.password
@@ -226,8 +229,10 @@ export default {
       }
     },
     getCompanies () {
+      const url = `${this.baseUrl  }/api/empresa`
+
       try {
-        axios.get('http://localhost:8000/api/empresa').then(res => {
+        axios.get(url).then(res => {
           this.empresas = res.data.data
         })
       } catch (err) {

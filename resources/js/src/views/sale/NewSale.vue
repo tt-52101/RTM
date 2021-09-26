@@ -2,7 +2,7 @@
 
     <vs-row>
         <transition name="slide-fade">
-            <vs-col  vs-type="flex" vs-justify="center" vs-w="9" vs-xs="12" v-if="!viewHeadSale">
+            <vs-col  vs-type="flex" vs-justify="center" vs-w="8" vs-xs="12" v-if="!viewHeadSale">
                 <vs-row>
                     <vs-col style="padding: 5px" vs-xs="12">
                         <vs-row >
@@ -18,7 +18,7 @@
                             </vs-col>
                         </vs-row>
                     </vs-col>
-                    <vs-col :key="index" v-for="p,index in productsFilter" vs-justify="center" vs-align="center" vs-w="3" vs-xs="6">
+                    <vs-col :key="index" v-for="p,index in productsFilter" vs-justify="center" vs-align="center" vs-w="4" vs-xs="6">
                         <div style="padding: 5px; width: 100%">
                             <vs-card>
                                 <div slot="media">
@@ -34,7 +34,23 @@
                                     <h6>{{p.Producto}}</h6>
                                     <span  style="font-size: 28px;color: #1b9a59">
                                     S/. {{p.PVenta}}
-                                </span>
+                                    </span>
+                                    <div style="font-size: 8px">
+                                        <template v-if="p.products">
+                                            <vs-collapse>
+                                                <vs-collapse-item icon-arrow="arrow_drop_down">
+                                                    <div slot="header">
+                                                        Detalle
+                                                    </div>
+                                                    <ul>
+                                                        <li v-for="p_detail in p.products">
+                                                            {{p_detail.Producto}} - S/.{{p_detail.PVenta}}
+                                                        </li>
+                                                    </ul>
+                                                </vs-collapse-item>
+                                            </vs-collapse>
+                                        </template>
+                                    </div>
                                 </div>
                                 <div slot="footer">
                                     <vs-row vs-justify="flex-end">
@@ -48,7 +64,7 @@
             </vs-col>
         </transition>
 
-        <vs-col vs-align="top" vs-w="3" vs-xs="12">
+        <vs-col vs-align="top" vs-w="4" vs-xs="12">
             <div style="padding: 5px;     height: 100%;">
                 <vs-card class="cardx">
                     <div slot="header">
@@ -64,8 +80,21 @@
                                     <li v-for="item in saleDetail" >
                                         <vs-row>
                                             <vs-col vs-w="7">
-                                                <strong>{{item.Producto}}</strong>
-                                                P. Venta: S/.{{item.PVenta}}
+                                                <div style="display: flex;flex-direction: column;">
+                                                    <strong>{{item.Producto}}</strong>
+                                                    <span>
+                                                     <template v-if="item.edit === 0">
+                                                    P. Venta: S/. <span v-on:dblclick="editPventa(item.IDProducto, 1)">{{item.PVenta}}</span>
+                                                </template>
+                                                <template v-else>
+                                                    P. Venta: S/. <input type="number" v-on:keyup.enter="editPventa(item.IDProducto, 0)" v-model="item.PVenta" />
+                                                </template>
+                                                </span>
+
+                                                    <span style="color: #ff5656">
+                                                        F. Atencion <input style="color: #ff5656" type="date"  v-model="item.dateAtention">
+                                                    </span>
+                                                </div>
                                             </vs-col>
                                             <vs-col vs-w="5">
                                                 <div class="content-group-btn">
@@ -88,8 +117,10 @@
                         <vs-divider>
                             Total
                         </vs-divider>
-                        <div style="padding-bottom: 15px;">
-                            <h3>Total: {{totalSale}}</h3>
+
+                        <div style="padding-bottom: 15px; text-align: right">
+                            colocar pago a cuenta
+                            <h3 style="font-size: 40px;color: #ff5656;">Total: {{totalSale}}</h3>
                         </div>
 
                         <vs-button :disabled="totalSale<=0" v-if="!viewHeadSale" style="width: 100%" icon="arrow_forward_ios" color="success" type="filled" @click="showHeadSale">Siguiente</vs-button>
@@ -101,7 +132,7 @@
                 </vs-card>
             </div>
         </vs-col>
-        <vs-col  vs-type="flex" vs-align="top" vs-w="9" vs-xs="12 " v-if="viewHeadSale">
+        <vs-col  vs-type="flex" vs-align="top" vs-w="8" vs-xs="12 " v-if="viewHeadSale">
             <div style="padding: 5px;height: 100%; width: 100%">
                 <vx-card title="Comprobante de venta" subtitle="">
                    <vs-row>
@@ -271,7 +302,17 @@ export default {
       } else {
         //no existe
         product.cant = 1
-        currentSaleDetail.push(product)
+        const elementProduct = {
+          IDProducto:product.IDProducto,
+          Producto: product.Producto,
+          PVenta: product.PVenta,
+          type: product.type,
+          URLImagen: product.URLImagen,
+          edit: product.edit,
+          cant: product.cant,
+          dateAtention: null
+        }
+        currentSaleDetail.push(elementProduct)
       }
       this.saleDetail = currentSaleDetail
       this.calcSale()
@@ -323,6 +364,14 @@ export default {
       if (!e.dateSale) return 0
 
       return 1
+    },
+    editPventa(IDProducto, edit){
+      const product = this.productsFilter.find(item => item.IDProducto == IDProducto)
+      const pos = this.saleDetail.findIndex(i => i.IDProducto === product.IDProducto)
+      const detailTemp = this.saleDetail
+      detailTemp[pos].edit = edit
+      this.saleDetail = detailTemp
+      this.calcSale()
     }
   }
 }
@@ -391,6 +440,24 @@ export default {
         padding: 5px;
         color: inherit;
         width: 100%;
+    }
+
+    .vs-collapse {
+        padding: 0px;
+
+    }
+
+    [dir] .vs-collapse-item--header{
+        padding: 0;
+    }
+
+    .vs-collapse-item--header{
+        padding: 0;
+        font-size: 12px;
+    }
+
+    .con-content--item{
+        font-size: 11px !important;
     }
 
 
